@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,12 +7,11 @@ public class CameraController : MonoBehaviour
     [SerializeField] private Camera cam;
     [Header("Move")]
     [SerializeField] private float moveSpeed;
-
+    [SerializeField] private float xInput;
     [SerializeField] private Transform corner1;
     [SerializeField] private Transform corner2;
-    
-    [SerializeField] private float xInput;
     [SerializeField] private float zInput;
+    public static CameraController instance;
     
     [Header("Zoom")]
     [SerializeField] private float zoomSpeed;
@@ -21,57 +19,38 @@ public class CameraController : MonoBehaviour
     [SerializeField] private float minZoomDist;
     [SerializeField] private float maxZoomDist;
     [SerializeField] private float dist;
-
-    [Header("Rotate")] [SerializeField] private float rotationAmount;
+    
+    [Header("Rotate")]
+    [SerializeField] private float rotationAmount;
     [SerializeField] private Quaternion newRotation;
-
-    public static CameraController instance;
-
-    private void Awake()
+    void Awake()
     {
         instance = this;
         cam = Camera.main;
-
         newRotation = transform.rotation;
         rotationAmount = 1;
     }
-
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        moveSpeed = 50;
-
-        zoomSpeed = 25;
-        minZoomDist = 15;
-        maxZoomDist = 50;
-    }
-
-    void MoveByKB()
+    
+    private void MoveByKB()
     {
         xInput = Input.GetAxis("Horizontal");
         zInput = Input.GetAxis("Vertical");
-
-        Vector3 dir = (transform.forward * zInput) + (transform.right * xInput);
-        transform.position += dir * moveSpeed * Time.deltaTime;
+        Vector3 dir = (transform.forward * zInput) + (transform.right *
+                                                      xInput);
+        transform.position += dir * Time.deltaTime * moveSpeed;
         transform.position = Clamp(corner1.position, corner2.position);
     }
-    // Update is called once per frame
-    void Update()
-    {
-        MoveByKB();
-        Zoom();
-        Rotate();
-    }
+    
     private Vector3 Clamp(Vector3 lowerLeft, Vector3 topRight)
     {
-        Vector3 pos = new Vector3(Mathf.Clamp(transform.position.x,
+        Vector3 pos = new Vector3(Mathf.Clamp(transform.position.x, 
                 lowerLeft.x, topRight.x),
             transform.position.y,
             Mathf.Clamp(transform.position.z,
                 lowerLeft.z, topRight.z));
         return pos;
     }
+    
     private void Zoom()
     {
         zoomModifier = Input.GetAxis("Mouse ScrollWheel");
@@ -87,6 +66,7 @@ public class CameraController : MonoBehaviour
             return; //too far
         cam.transform.position += cam.transform.forward * zoomModifier * zoomSpeed;
     }
+    
     void Rotate()
     {
         if (Input.GetKey(KeyCode.Q))
@@ -95,5 +75,25 @@ public class CameraController : MonoBehaviour
             newRotation *= Quaternion.Euler(Vector3.up * -rotationAmount);
         transform.rotation = Quaternion.Lerp(transform.rotation,
             newRotation, Time.deltaTime * moveSpeed);
+    }
+    
+    
+    
+    // Start is called before the first frame update
+    void Start()
+    {
+        moveSpeed = 50;
+
+        zoomSpeed = 25;
+        minZoomDist = 15;
+        maxZoomDist = 50;
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        MoveByKB();
+        Zoom();
+        Rotate();
     }
 }
